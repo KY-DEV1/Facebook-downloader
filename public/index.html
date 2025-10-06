@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Video Downloader - Unduh Video Facebook Gratis</title>
+    <meta name="description" content="Download video dari Facebook dengan mudah dan cepat. Support semua kualitas HD dan SD.">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>📹 Facebook Video Downloader</h1>
+            </div>
+            <p class="subtitle">Unduh video dari Facebook dengan mudah dan cepat - 100% Gratis!</p>
+        </header>
+
+        <main>
+            <div class="download-card">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="url">
+                            <span class="label-icon">🔗</span>
+                            Masukkan URL Video Facebook:
+                        </label>
+                        <input 
+                            type="text" 
+                            id="url" 
+                            placeholder="Contoh: https://www.facebook.com/username/videos/1234567890/ atau https://fb.watch/abc123def/"
+                            autocomplete="off"
+                        >
+                        <div class="input-hint">
+                            <span>💡 Cara dapat URL: Buka video di Facebook → Klik tombol "..." → Salin link</span>
+                        </div>
+                    </div>
+                    
+                    <button id="download-btn" class="btn-primary">
+                        <div class="loader" id="loader"></div>
+                        <span id="btn-text">🎬 Download Video</span>
+                    </button>
+                </div>
+
+                <div class="error-message" id="error">
+                    <span class="error-icon">⚠️</span>
+                    <span id="error-text"></span>
+                </div>
+
+                <div class="result-section" id="result">
+                    <div class="result-header">
+                        <h3>✅ Video Berhasil Ditemukan!</h3>
+                        <div class="success-badge">Siap Download</div>
+                    </div>
+                    
+                    <div class="video-info">
+                        <div class="thumbnail-container">
+                            <img id="thumbnail" src="" alt="Video Thumbnail">
+                            <div class="video-overlay">
+                                <div class="video-duration" id="duration">0:00</div>
+                                <div class="video-views" id="views">0 views</div>
+                            </div>
+                        </div>
+                        <div class="video-details">
+                            <h4 id="video-title">Video Facebook</h4>
+                            <div class="video-meta">
+                                <span class="meta-item" id="upload-date">Today</span>
+                                <span class="meta-item" id="source">Facebook</span>
+                            </div>
+                            <div class="quality-options" id="quality-options">
+                                <!-- Options will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-sections">
+                <div class="instructions card">
+                    <h3>📋 Cara Menggunakan:</h3>
+                    <ol>
+                        <li><strong>Buka Facebook</strong> - Cari video yang ingin diunduh</li>
+                        <li><strong>Salin URL</strong> - Klik tombol "..." pada video dan pilih "Salin tautan"</li>
+                        <li><strong>Tempel URL</strong> - Tempel URL tersebut ke dalam kotak di atas</li>
+                        <li><strong>Download</strong> - Klik tombol "Download Video" dan pilih kualitas</li>
+                        <li><strong>Selesai!</strong> - Video akan terunduh ke perangkat Anda</li>
+                    </ol>
+                </div>
+
+                <div class="features card">
+                    <h3>✨ Fitur Unggulan:</h3>
+                    <ul>
+                        <li>✅ Support semua kualitas video (HD, SD)</li>
+                        <li>✅ Download cepat tanpa batas</li>
+                        <li>✅ Tanpa perlu login atau install app</li>
+                        <li>✅ Aman dan gratis 100%</li>
+                        <li>✅ Compatible dengan semua device</li>
+                    </ul>
+                </div>
+
+                <div class="disclaimer card warning">
+                    <h3>⚠️ Peringatan Penting:</h3>
+                    <p>Aplikasi ini hanya untuk mengunduh video pribadi atau video yang Anda miliki hak aksesnya. Pengunduhan dan distribusi konten yang dilindungi hak cipta tanpa izin dapat melanggar hukum. Gunakan dengan bijak!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Facebook Video Downloader | Dibuat dengan ❤️ untuk memudahkan download video</p>
+            <p class="footer-note">Tool ini tidak berafiliasi dengan Facebook Inc.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+  </html>
