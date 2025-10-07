@@ -36,10 +36,5 @@
       "src": "/(.*)",
       "dest": "/public/index.html"
     }
-  ],
-  "functions": {
-    "api/download.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
