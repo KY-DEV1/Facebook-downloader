@@ -118,15 +118,32 @@ class FacebookDownloaderPro {
     }
 
     isValidFacebookUrl(url) {
-        const patterns = [
-            /https?:\/\/(?:www|m)\.facebook\.com\/.*\/videos\/.*/,
-            /https?:\/\/(?:www|m)\.facebook\.com\/video\.php\?v=\d+/,
-            /https?:\/\/fb\.watch\/.*/,
-            /https?:\/\/(?:www|m)\.facebook\.com\/.*\/videos\/\d+/,
-            /https?:\/\/(?:www|m)\.facebook\.com\/watch\/?\?v=\d+/
-        ];
-        
-        return patterns.some(pattern => pattern.test(url));
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    
+    // Check if it's a Facebook domain
+    if (!hostname.includes('facebook.com') && !hostname.includes('fb.watch')) {
+      return false;
+    }
+
+    // Check path patterns for video content
+    const path = urlObj.pathname + urlObj.search;
+    const videoPatterns = [
+      /\/videos?\//,
+      /\/video\.php/,
+      /\/watch\/?/,
+      /\/share\/v\//,
+      /\/reel\//,
+      /\/story\.php/,
+      /\/posts\//,
+      /\/photo\.php/
+    ];
+
+    return videoPatterns.some(pattern => pattern.test(path));
+  } catch (error) {
+    return false;
+  }
     }
 
     async fetchVideoData(url) {
@@ -308,3 +325,4 @@ document.addEventListener('visibilitychange', () => {
         trackEvent('page_visible');
     }
 });
+
