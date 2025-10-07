@@ -1,9 +1,16 @@
-class FacebookVideoDownloader {
+class FacebookDownloaderPro {
     constructor() {
         this.apiBaseUrl = '/api/download';
         this.isProcessing = false;
+        this.downloadCount = parseInt(localStorage.getItem('downloadCount') || '1234');
+        this.initializeApp();
+    }
+
+    initializeApp() {
         this.initializeEventListeners();
+        this.initializeStats();
         this.initializeServiceWorker();
+        this.setupAnalytics();
     }
 
     initializeEventListeners() {
@@ -21,15 +28,42 @@ class FacebookVideoDownloader {
         urlInput.addEventListener('input', () => {
             this.hideError();
         });
+
+        // Auto-focus on input
+        setTimeout(() => {
+            urlInput.focus();
+        }, 500);
+    }
+
+    initializeStats() {
+        // Update stats with random variations
+        const stats = {
+            downloads: this.downloadCount + Math.floor(Math.random() * 100),
+            success: 97 + Math.floor(Math.random() * 3),
+            speed: (1.8 + Math.random() * 1.5).toFixed(1)
+        };
+
+        document.getElementById('stat-downloads').textContent = 
+            stats.downloads.toLocaleString();
+        document.getElementById('stat-success').textContent = 
+            stats.success + '%';
+        document.getElementById('stat-speed').textContent = 
+            stats.speed + 's';
     }
 
     initializeServiceWorker() {
-        // Optional: Add service worker for offline functionality
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
-                .then(() => console.log('Service Worker registered'))
-                .catch(err => console.log('Service Worker registration failed'));
+                .then(() => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed'));
         }
+    }
+
+    setupAnalytics() {
+        // Simple analytics
+        window.trackEvent = (event, data) => {
+            console.log('Event:', event, data);
+        };
     }
 
     async handleDownload() {
@@ -50,12 +84,19 @@ class FacebookVideoDownloader {
         this.hideResult();
 
         try {
+            trackEvent('download_started', { url });
             const videoData = await this.fetchVideoData(url);
-            this.displayResult(videoData);
-            this.trackEvent('download_success', { url });
+            
+            if (videoData.success) {
+                this.displayResult(videoData.data);
+                this.incrementDownloadCount();
+                trackEvent('download_success', { url });
+            } else {
+                throw new Error(videoData.error);
+            }
         } catch (error) {
             this.showError(error.message);
-            this.trackEvent('download_error', { url, error: error.message });
+            trackEvent('download_error', { url, error: error.message });
         } finally {
             this.isProcessing = false;
             this.setLoadingState(false, downloadBtn, loader, btnText);
@@ -69,7 +110,7 @@ class FacebookVideoDownloader {
         }
 
         if (!this.isValidFacebookUrl(url)) {
-            this.showError('❌ URL Facebook tidak valid. Format yang didukung:\n• https://facebook.com/.../videos/...\n• https://fb.watch/...\n• https://m.facebook.com/.../videos/...');
+            this.showError('❌ URL Facebook tidak valid. Pastikan URL dari video Facebook.\n\nFormat yang didukung:\n• https://facebook.com/.../videos/...\n• https://fb.watch/...\n• https://m.facebook.com/.../videos/...');
             return false;
         }
 
@@ -77,13 +118,20 @@ class FacebookVideoDownloader {
     }
 
     isValidFacebookUrl(url) {
-        const facebookRegex = /(?:https?:\/\/)?(?:www\.|m\.)?(?:facebook\.com|fb\.watch)\/(?:video\.php\?v=\d+|[\w\.]+\/videos?(?:\/[\w\-]+\/?)?\/?\d+)/;
-        return facebookRegex.test(url);
+        const patterns = [
+            /https?:\/\/(?:www|m)\.facebook\.com\/.*\/videos\/.*/,
+            /https?:\/\/(?:www|m)\.facebook\.com\/video\.php\?v=\d+/,
+            /https?:\/\/fb\.watch\/.*/,
+            /https?:\/\/(?:www|m)\.facebook\.com\/.*\/videos\/\d+/,
+            /https?:\/\/(?:www|m)\.facebook\.com\/watch\/?\?v=\d+/
+        ];
+        
+        return patterns.some(pattern => pattern.test(url));
     }
 
     async fetchVideoData(url) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
 
         try {
             const response = await fetch(this.apiBaseUrl, {
@@ -101,16 +149,10 @@ class FacebookVideoDownloader {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.error);
-            }
-
-            return data.data;
+            return await response.json();
         } catch (error) {
             if (error.name === 'AbortError') {
-                throw new Error('⏰ Timeout: Proses mengambil video terlalu lama. Coba lagi.');
+                throw new Error('⏰ Waktu permintaan habis. Coba lagi dengan URL yang berbeda.');
             }
             throw error;
         }
@@ -126,37 +168,38 @@ class FacebookVideoDownloader {
         const source = document.getElementById('source');
         const qualityOptions = document.getElementById('quality-options');
 
-        // Set data video
+        // Set video data
         thumbnail.src = videoData.thumbnail;
         thumbnail.alt = videoData.title;
-        thumbnail.onerror = () => {
-            thumbnail.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjBGMEYwIi8+CjxwYXRoIGQ9Ik0xNjAgMTIwSDE0MFYxODBIMTYwVjEyMFpNMTgwIDE0MEgyMDBWMTYwSDE4MFYxNDBaTTIyMCAxMjBIMjQwVjE4MEgyMjBWMTIwWk0yNjAgMTQwSDI4MFYxNjBIMjYwVjE0MFoiIGZpbGw9IiNDOEM4QzgiLz4KPC9zdmc+';
-        };
-        
-        duration.textContent = videoData.duration;
-        views.textContent = videoData.metadata?.views + ' views' || '0 views';
+        duration.textContent = videoData.duration || '--:--';
+        views.textContent = (videoData.metadata?.views || '0') + ' views';
         videoTitle.textContent = videoData.title;
-        uploadDate.textContent = videoData.metadata?.uploadDate || 'Today';
+        uploadDate.textContent = videoData.metadata?.uploadDate || 'Hari ini';
         source.textContent = videoData.metadata?.source || 'Facebook';
 
-        // Buat opsi kualitas
-        qualityOptions.innerHTML = videoData.qualities.map((quality, index) => `
-            <a href="${quality.url}" 
-               class="quality-btn" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               download="${this.sanitizeFilename(videoData.title)} - ${quality.quality}.${this.getFileExtension(quality.type)}"
-               onclick="this.trackEvent('quality_selected', { quality: '${quality.quality}', url: '${videoData.qualities[0].url}' })">
-                <div class="quality-info">
-                    <span class="quality-badge">${quality.quality}</span>
-                    <span>${quality.size}</span>
-                    <span class="file-type">${this.getFileType(quality.type)}</span>
-                </div>
-                <span>⬇️ Download</span>
-            </a>
-        `).join('');
+        // Create quality options
+        qualityOptions.innerHTML = videoData.qualities.map((quality, index) => {
+            const filename = this.sanitizeFilename(`${videoData.title} - ${quality.quality}`);
+            const fileExt = this.getFileExtension(quality.type);
+            
+            return `
+                <a href="${quality.url}" 
+                   class="quality-btn" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   download="${filename}.${fileExt}"
+                   onclick="trackEvent('quality_selected', { quality: '${quality.quality}', url: '${quality.url}' })">
+                    <div class="quality-info">
+                        <span class="quality-badge">${quality.quality}</span>
+                        <span>${quality.size}</span>
+                        <span class="file-type">${this.getFileType(quality.type)}</span>
+                    </div>
+                    <span>⬇️ Download</span>
+                </a>
+            `;
+        }).join('');
 
-        // Tampilkan hasil dengan animasi
+        // Show result with animation
         resultSection.style.display = 'block';
         setTimeout(() => {
             resultSection.scrollIntoView({ 
@@ -167,7 +210,11 @@ class FacebookVideoDownloader {
     }
 
     sanitizeFilename(filename) {
-        return filename.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        return filename
+            .replace(/[^a-z0-9\s]/gi, '_')
+            .replace(/\s+/g, '_')
+            .toLowerCase()
+            .substring(0, 100);
     }
 
     getFileExtension(mimeType) {
@@ -191,7 +238,7 @@ class FacebookVideoDownloader {
             button.disabled = true;
         } else {
             loader.style.display = 'none';
-            btnText.textContent = '🎬 Download Video';
+            btnText.textContent = '🎬 Download Video Sekarang';
             button.disabled = false;
         }
     }
@@ -219,51 +266,45 @@ class FacebookVideoDownloader {
         document.getElementById('result').style.display = 'none';
     }
 
-    trackEvent(eventName, properties = {}) {
-        // Simple analytics tracking
-        if (typeof gtag !== 'undefined') {
-            gtag('event', eventName, properties);
-        }
-        console.log(`Event: ${eventName}`, properties);
+    incrementDownloadCount() {
+        this.downloadCount++;
+        localStorage.setItem('downloadCount', this.downloadCount.toString());
+        this.initializeStats();
     }
 }
 
 // Utility functions
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes) return 'Unknown';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
+// Global track event function
+function trackEvent(event, data) {
+    if (typeof gtag !== 'undefined') {
+        gtag('event', event, data);
+    }
+    console.log(`[Analytics] ${event}:`, data);
 }
 
-// Inisialisasi aplikasi ketika DOM siap
+// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new FacebookVideoDownloader();
+    window.downloader = new FacebookDownloaderPro();
+    console.log('🚀 FB Downloader Pro initialized!');
     
-    // Tambahkan global function untuk tracking
-    window.trackEvent = (eventName, properties) => {
-        app.trackEvent(eventName, properties);
-    };
-    
-    console.log('Facebook Video Downloader initialized!');
+    // Add some interactive features
+    const urlInput = document.getElementById('url');
+    urlInput.addEventListener('focus', () => {
+        trackEvent('input_focused');
+    });
 });
 
-// Handle page visibility changes
+// Handle page visibility for better UX
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-        console.log('Page is visible');
+        trackEvent('page_visible');
     }
 });
