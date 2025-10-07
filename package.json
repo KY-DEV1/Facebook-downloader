@@ -4,8 +4,7 @@
   "description": "Facebook Video Downloader - Download videos from Facebook easily",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build step needed'"
+    "dev": "vercel dev"
   },
   "dependencies": {
     "axios": "^1.6.0",
